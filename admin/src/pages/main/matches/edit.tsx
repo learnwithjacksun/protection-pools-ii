@@ -12,15 +12,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type EditMatchSchema, editMatchSchema } from "@/schemas/matches";
 import { useParams } from "react-router-dom";
-import { matches } from "@/constants/dummy";
+import { useMatches } from "@/hooks";
 
 export default function EditMatch() {
   const { id } = useParams();
-  const [isActive, setIsActive] = useState(true);
+  const { updateMatch, isUpdating, matches } = useMatches();
+  const [isAvailable, setIsAvailable] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
-  const toggleActive = () => setIsActive((prev) => !prev);
-  const toggleCompleted = () => setIsCompleted((prev) => !prev);
-  const match = matches.find((match) => match.id === Number(id));
+  const toggleActive = () => {
+    setIsAvailable((prev) => !prev);
+  };
+  const toggleCompleted = () => {
+    setIsCompleted((prev) => !prev);
+  };
+  const match = matches?.find((match) => match.id === id);
+  console.log(match);
   const {
     register,
     handleSubmit,
@@ -30,7 +36,8 @@ export default function EditMatch() {
     resolver: zodResolver(editMatchSchema),
   });
   const onSubmit = (data: EditMatchSchema) => {
-    console.log(data, isActive, isCompleted);
+    const status = isCompleted ? "completed" : "pending";
+    updateMatch(id!, data, isAvailable, status);
   };
 
   useEffect(() => {
@@ -42,7 +49,7 @@ export default function EditMatch() {
         homeScore: match.homeScore.toString(),
         awayScore: match.awayScore.toString(),
       });
-      setIsActive(match.isActive ? true : false);
+      setIsAvailable(match.isAvailable ? true : false);
       setIsCompleted(match.status.toLowerCase() === "completed" ? true : false);
     }
   }, [match]);
@@ -97,17 +104,17 @@ export default function EditMatch() {
             <div
               className={clsx(
                 "p-1 cursor-pointer rounded-full w-10 transition-all duration-200",
-                isActive ? "bg-primary" : "bg-gray-200",
+                isAvailable ? "bg-primary" : "bg-gray-200",
               )}
             >
               <div
                 className={clsx(
                   "h-4 w-4 rounded-full transition-all duration-200 bg-white",
-                  isActive ? "translate-x-full" : "translate-x-0",
+                  isAvailable ? "translate-x-full" : "translate-x-0",
                 )}
               ></div>
             </div>
-            <span className="text-nowrap">Keep Active</span>
+            <span className="text-nowrap">Availability</span>
           </div>
           <div
             onClick={toggleCompleted}
@@ -133,6 +140,7 @@ export default function EditMatch() {
           initialText="Edit Match"
           loadingText="Editing Match..."
           type="submit"
+          loading={isUpdating}
           className="btn-primary w-full h-11 rounded-lg"
         />
       </form>

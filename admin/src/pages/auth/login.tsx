@@ -3,8 +3,10 @@ import { ShieldSecurity } from "iconsax-reactjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginSchema } from "@/schemas/auth";
+import { useAuth } from "@/hooks";
 
 export default function Login() {
+  const {login, loading} = useAuth();
     const {register, handleSubmit, formState: {errors}} = useForm<LoginSchema>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -14,15 +16,15 @@ export default function Login() {
     })
 
     const onSubmit = (data: LoginSchema) => {
-        console.log(data);
+        login(data);
     }
   return (
-    <div className="bg-gradient-to-b to-primary-2 min-h-[100dvh] pt-20">
-      <div className="max-w-[480px] w-[90%] space-y-4 mx-auto bg-white px-4 pt-6 pb-4 rounded-2xl shadow-xl">
+    <div className="bg-white min-h-[100dvh] pt-20">
+      <div className="max-w-[480px] w-[90%] space-y-4 mx-auto">
         <div className="w-fit mx-auto">
           <ShieldSecurity
             variant="Bulk"
-            className="text-primary-2"
+            className="text-yellow-500"
             size={90}
           />
         </div>
@@ -38,7 +40,7 @@ export default function Login() {
             type="email"
             label="E-mail Address"
             placeholder="Enter Email"
-            className="bg-secondary"
+            className="bg-gray-100"
             {...register("email")}
             error={errors.email?.message}
           />
@@ -46,7 +48,7 @@ export default function Login() {
             type="password"
             label="Password"
             placeholder="Enter Password"
-            className="bg-secondary"
+            className="bg-gray-100"
             {...register("password")}
             error={errors.password?.message}
           />
@@ -55,6 +57,7 @@ export default function Login() {
             loadingText="Loading..."
             type="submit"
             className="w-full btn-primary h-11 rounded-lg"
+            loading={loading}
           />
         </form>
       </div>

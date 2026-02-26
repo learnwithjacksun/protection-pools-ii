@@ -41,3 +41,24 @@ interface SelectWithoutIconProps
     value: string;
   }[];
 }
+
+interface IMatch {
+  id: string;
+  week: number;
+  matchNo: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+  status: string;
+  isAvailable?: boolean;
+}
+
+interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  isActive: boolean;
+  isAdmin: boolean
+}

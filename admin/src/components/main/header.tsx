@@ -4,8 +4,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Cup, LogoutCurve, Profile2User } from "iconsax-reactjs";
 import MobileMenu from "./mobilemenu";
+import { useAuth } from "@/hooks";
 
 export default function Header() {
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   return (
@@ -21,19 +23,6 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
-           
-
-            {/* <Link
-              to="/support"
-              className="relative inline-flex h-10 w-10 min-w-10 center rounded-full bg-secondary text-muted hover:border-primary hover:text-primary transition-colors"
-              aria-label="Notifications"
-            >
-              <Message
-                size={24}
-                className="text-muted hover:text-main transition-colors"
-              />
-            </Link> */}
-
             {/* User dropdown (static for now) */}
             <div className="relative">
               <div
@@ -42,17 +31,17 @@ export default function Header() {
               >
                 <div className="center h-9 w-9 overflow-hidden rounded-full bg-primary/50">
                   <img
-                    src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURI("Gift" + " " + "Jackspn")}`}
+                    src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURI(user?.name || "")}`}
                     alt=""
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="md:flex hidden flex-col items-start">
                   <span className="text-xs font-medium leading-tight">
-                    {"Gift" + " " + "Jackspn"}
+                    {user?.name}
                   </span>
                   <span className="text-[11px] text-muted leading-tight">
-                    {"admin@nazapay.com"}
+                    {user?.email}
                   </span>
                 </div>
                 <ChevronDown size={18} className="text-muted shrink-0" />
@@ -80,36 +69,39 @@ export default function Header() {
                       <div className="flex md:hidden items-center gap-3 border-b border-line pb-3 mb-3">
                         <div className="center h-10 w-10 min-w-10 overflow-hidden rounded-full bg-primary/50">
                           <img
-                            src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURI("Gift" + " " + "Jackspn")}`}
+                            src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURI(user?.name || "")}`}
                             alt=""
                             className="h-full w-full object-cover"
                           />
                         </div>
                         <div className="overflow-x-hidden">
                           <div className="text-sm font-semibold text-gray-900">
-                            {"Gift" + " " + "Jackspn"}
+                            {user?.name}
                           </div>
                           <div className="text-xs text-muted truncate text-ellipsis">
-                            {"admin@nazapay.com"}
+                            {user?.email}
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-col gap-1">
                         <Link
-                          to="/wallet"
+                          to="/matches"
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted hover:bg-primary/5 hover:text-primary transition"
                         >
-                          <Cup size={18}/>
+                          <Cup size={18} />
                           Matches
                         </Link>
                         <Link
-                          to="/settings"
+                          to="/users"
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted hover:bg-primary/5 hover:text-primary transition"
                         >
-                          <Profile2User size={18}/>
+                          <Profile2User size={18} />
                           Users
                         </Link>
-                        <button onClick={() => { }} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-red-600 bg-red-50 hover:text-red-700 transition flex items-center gap-2 mt-2 pt-3">
+                        <button
+                          onClick={() => logout()}
+                          className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-red-600 bg-red-50 hover:text-red-700 transition flex items-center gap-2 mt-2 pt-3"
+                        >
                           Logout
                           <LogoutCurve size={20} />
                         </button>

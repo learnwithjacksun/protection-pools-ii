@@ -38,7 +38,7 @@ interface SelectWithoutIconProps extends React.SelectHTMLAttributes<HTMLSelectEl
 }
 type MatchStatus = "pending" | "completed";
 interface IMatch {
-  id: number;
+  id: string;
   week: number;
   matchNo: number;
   homeTeam: string;
@@ -46,11 +46,11 @@ interface IMatch {
   homeScore: number;
   awayScore: number;
   status: string;
-  isActive?: boolean;
+  isAvailable?: boolean;
 }
 
 interface IUser {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;

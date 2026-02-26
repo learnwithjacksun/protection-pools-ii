@@ -11,8 +11,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type CreateMatchSchema, createMatchSchema } from "@/schemas/matches";
+import { useMatches } from "@/hooks";
 
 export default function AddMatch() {
+  const { createMatch, isCreating } = useMatches();
   const [isActive, setIsActive] = useState(true);
   const toggleActive = () => setIsActive((prev) => !prev);
   const {
@@ -23,7 +25,7 @@ export default function AddMatch() {
     resolver: zodResolver(createMatchSchema),
   });
   const onSubmit = (data: CreateMatchSchema) => {
-    console.log(data, isActive);
+    createMatch(data, isActive);
   };
   return (
     <DashboardLayout>
@@ -77,6 +79,7 @@ export default function AddMatch() {
           initialText="Add Match"
           loadingText="Adding Match..."
           type="submit"
+          loading={isCreating}
           className="btn-primary w-full h-11 rounded-lg"
         />
       </form>

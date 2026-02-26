@@ -1,17 +1,19 @@
 import { ButtonWithLoader, GoBack, InputWithoutIcon } from "@/components/ui";
-import { users } from "@/constants/dummy";
+import { useUsers } from "@/hooks";
 import { DashboardLayout } from "@/layouts";
 import { editUserSchema, type EditUserSchema } from "@/schemas/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
-import { Ticket } from "iconsax-reactjs";
+import { Ticket, Trash } from "iconsax-reactjs";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 
 export default function UserDetails() {
   const { id } = useParams();
-  const user = users.find((user) => user.id === Number(id));
+  const { users, updateUser, isLoading, deleteUser, isDeleting } = useUsers();
+  const user = users?.find((user) => user.id === id);
   const [isActive, setIsActive] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const toggleActive = () => setIsActive((prev) => !prev);
@@ -26,7 +28,8 @@ export default function UserDetails() {
     resolver: zodResolver(editUserSchema),
   });
   const onSubmit = (data: EditUserSchema) => {
-    console.log(data, isActive, isAdmin);
+    if (!id) return;
+    updateUser(id, data, isActive, isAdmin);
   };
 
   useEffect(() => {
@@ -40,6 +43,15 @@ export default function UserDetails() {
       setIsAdmin(user.isAdmin);
     }
   }, [user]);
+
+  const handleDeleteUser = (id: string) => {
+    const confirm = window.confirm(
+      `Are you sure you want to delete ${user?.name}?`,
+    );
+    if (confirm) {
+      deleteUser(id);
+    }
+  };
   return (
     <DashboardLayout>
       <GoBack title="User Details" />
@@ -124,9 +136,26 @@ export default function UserDetails() {
           initialText="Update User"
           loadingText="Updating User..."
           type="submit"
+          loading={isLoading}
           className="btn-primary w-full h-11 rounded-lg"
         />
       </form>
+
+      <button
+        onClick={() => {
+          if (user?.id) {
+            handleDeleteUser(user.id);
+          }
+        }}
+        className="bg-red-500/10 text-red-500 wrapper h-11 rounded-lg"
+      >
+        {isDeleting ? (
+          <Loader2 size={20} className="animate-spin" />
+        ) : (
+          <Trash variant="Bold" size={20} />
+        )}
+        {isDeleting ? "Deleting User..." : "Delete User"}
+      </button>
     </DashboardLayout>
   );
 }

@@ -9,7 +9,7 @@ export const matches = [
     homeScore: 0,
     awayScore: 0,
     status: "pending",
-    isActive: true,
+    isAvailable: true,
   },
   {
     id: 2,
@@ -20,7 +20,7 @@ export const matches = [
     homeScore: 0,
     awayScore: 0,
     status: "completed",
-    isActive: true,
+    isAvailable: true,
   },
   {
     id: 3,
@@ -31,7 +31,7 @@ export const matches = [
     homeScore: 0,
     awayScore: 0,
     status: "pending",
-    isActive: true,
+    isAvailable: true,
   },
   {
     id: 4,
@@ -42,7 +42,7 @@ export const matches = [
     homeScore: 0,
     awayScore: 0,
     status: "pending",
-    isActive: false,
+    isAvailable: false,
   },
 ];
 

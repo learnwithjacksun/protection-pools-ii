@@ -1,18 +1,19 @@
 import { MatchCard } from "@/components/main/matches";
 import { weeks } from "@/constants/data";
-import { matches } from "@/constants/dummy";
 import { DashboardLayout } from "@/layouts";
-import { ChevronDown, PlusCircle, Search } from "lucide-react";
+import { ChevronDown, Loader2, PlusCircle, Search } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useMatches } from "@/hooks";
 
 export default function Matches() {
+  const { matches, fetchingMatches} = useMatches();
   const [search, setSearch] = useState("");
   const [week, setWeek] = useState("");
 
   const searchTerm = search.toLowerCase().trim();
 
-  const filteredMatches = matches.filter((match) => {
+  const filteredMatches = matches?.filter((match) => {
     const matchesWeek = week === "" || match.week === Number(week);
 
     const matchesSearch =
@@ -21,6 +22,8 @@ export default function Matches() {
 
     return matchesWeek && matchesSearch;
   });
+
+
   return (
     <DashboardLayout title="Manage Matches">
       <div className="flex items-center bg-white gap-4 border border-line rounded-md px-4 focus-within:ring-4 focus-within:ring-primary/10 focus-within:border-primary">
@@ -69,8 +72,20 @@ export default function Matches() {
         </div>
       </div>
 
+      {fetchingMatches && (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 size={18} className="animate-spin" /> Fetching matches...
+        </div>
+      )}
+
+      {filteredMatches?.length === 0 && (
+        <div className="flex items-center justify-center h-48">
+          <span className="text-muted">No matches found</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredMatches.map((match) => (
+        {filteredMatches?.map((match) => (
           <MatchCard key={match.id} match={match} />
         ))}
       </div>
