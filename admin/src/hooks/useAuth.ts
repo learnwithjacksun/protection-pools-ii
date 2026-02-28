@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/config/api";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
+import axios from "axios";
 
 export default function useAuth() {
   const { user, setUser } = useAuthStore();
@@ -25,10 +25,12 @@ export default function useAuth() {
         toast.success("Login successful!");
         navigate("/dashboard");
       }
-    } catch (error: any | AxiosError) {
+    } catch (error: unknown) {
       console.log(error);
-      if (error as AxiosError) {
-        toast.error(error.response?.data.message);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
       }
     } finally {
       setLoading(false);
@@ -43,9 +45,12 @@ export default function useAuth() {
       toast.success("Logged out successfully");
       useAuthStore.persist.clearStorage();
       navigate("/");
-    } catch (error: any | AxiosError) {
-      if (error as AxiosError) {
-        toast.error(error.response?.data.message);
+    } catch (error: unknown) {
+      console.log(error);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
       }
     } finally {
       setLoading(false);
@@ -59,7 +64,7 @@ export default function useAuth() {
         setUser(response.data.data);
         return response.data.data;
       }
-    } catch (error: any | AxiosError) {
+    } catch {
       setUser(null);
       useAuthStore.persist.clearStorage();
       await logout();

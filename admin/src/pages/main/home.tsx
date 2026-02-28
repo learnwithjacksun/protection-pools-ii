@@ -4,12 +4,13 @@ import { Calendar, Profile2User, Setting2, Ticket } from "iconsax-reactjs";
 import { Link } from "react-router-dom";
 import { useAdmin, useMatches, useUsers } from "@/hooks";
 import { ButtonWithLoader, InputWithoutIcon } from "@/components/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { users } = useUsers();
   const { matches } = useMatches();
   const { admin, isUpdating, updateData } = useAdmin();
+  const currentWeek = admin?.currentWeek ?? "";
   const statCards = [
     {
       title: "Total Users",
@@ -34,17 +35,25 @@ export default function Home() {
     },
     {
       title: "Week",
-      value: admin.currentWeek,
+      value: currentWeek === "" ? "—" : currentWeek,
       icon: Calendar,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
   ];
 
-  const [week, setWeek] = useState(admin.currentWeek);
+  const [week, setWeek] = useState("");
+  useEffect(() => {
+    if (currentWeek !== "") {
+      setWeek(String(currentWeek));
+    }
+  }, [currentWeek]);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    updateData(Number(week), admin.id);
+    if (!admin?.id) return;
+    const weekNumber = Number(week);
+    if (!Number.isFinite(weekNumber)) return;
+    updateData(weekNumber, admin.id);
   };
 
   function Greet() {
@@ -157,6 +166,7 @@ export default function Home() {
             loadingText="Updating..."
             loading={isUpdating}
             type="submit"
+            disabled={isUpdating || !admin?.id || week === ""}
             className="w-full h-10 btn-primary rounded"
           />
         </form>

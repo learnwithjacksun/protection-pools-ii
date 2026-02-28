@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function useMatches() {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,8 +35,13 @@ export default function useMatches() {
         queryClient.invalidateQueries({ queryKey: ["matches"] });
         navigate("/matches");
       }
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+    } catch (error: unknown) {
+      console.log(error);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setIsCreating(false);
     }
@@ -64,8 +70,13 @@ export default function useMatches() {
         queryClient.invalidateQueries({ queryKey: ["matches"] });
         navigate("/matches");
       }
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+    } catch (error: unknown) {
+      console.log(error);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -79,8 +90,13 @@ export default function useMatches() {
         toast.success("Match deleted successfully");
         queryClient.invalidateQueries({ queryKey: ["matches"] });
       }
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+    } catch (error: unknown) {
+      console.log(error);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setIsDeleting(false);
     }

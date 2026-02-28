@@ -1,7 +1,7 @@
 import api from "@/config/api";
 import type { EditUserSchema } from "@/schemas/user";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AxiosError } from "axios";
+import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -38,10 +38,12 @@ export default function useUsers() {
       if (response.data.success) {
         toast.success("User updated successfully");
       }
-    } catch (error: any | AxiosError) {
+    } catch (error: unknown) {
       console.log(error);
-      if (error as AxiosError) {
-        toast.error(error.response?.data.message);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
       }
     } finally {
       setIsLoading(false);
@@ -57,10 +59,12 @@ export default function useUsers() {
         navigate("/users");
         queryClient.invalidateQueries({ queryKey: ["users"] });
       }
-    } catch (error: any | AxiosError) {
+    } catch (error: unknown) {
       console.log(error);
-      if (error as AxiosError) {
-        toast.error(error.response?.data.message);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message);
+      } else {
+        toast.error("Something went wrong");
       }
     } finally {
       setIsDeleting(false);
