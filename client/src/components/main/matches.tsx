@@ -1,4 +1,5 @@
-import { Search, Loader, CalendarX2 } from "lucide-react";
+import { Search, Loader } from "lucide-react";
+import { Calendar } from "iconsax-reactjs";
 import { useState } from "react";
 import MatchCard from "./match-card";
 import { useAdmin, useMatches } from "@/hooks";
@@ -40,7 +41,7 @@ export default function Matches() {
           <h3 className="text-3xl font-semibold">{admin?.currentWeek}</h3>
         </div>
         <div className=" gap-4 bg-primary/10 h-14 w-14 center rounded">
-          <CalendarX2 size={24} className="text-primary" />
+          <Calendar size={24} className="text-primary" />
         </div>
       </div>
       

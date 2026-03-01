@@ -5,6 +5,7 @@ import { Home } from "@/pages/main";
 import { Login } from "./pages/auth";
 import { Matches, AddMatch, EditMatch } from "./pages/main/matches";
 import { UserDetails, UsersPage } from "./pages/main/users";
+import { BetDetails } from "./pages/main/bets";
 import RouteGuard from "./pages/route-guard";
 import { useAuth } from "./hooks";
 import { useEffect } from "react";
@@ -31,6 +32,7 @@ export default function App() {
             <Route index element={<UsersPage />} />
             <Route path="details/:id" element={<UserDetails />} />
           </Route>
+          <Route path="/bets/:bookingCode" element={<BetDetails />} />
         </Route>
       </Routes>
     </>

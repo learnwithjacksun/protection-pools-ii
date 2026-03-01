@@ -13,9 +13,29 @@ const QUICK_STAKE_AMOUNTS = [100, 500, 1000, 5000, 10000];
 
 export default function Betslip() {
   const { placeBet, isPlacingBet } = useBets();
-  const { selectedMatches, setSelectedMatches } = useMatchStore();
-  const [stake, setStake] = useState("0.0")
-  const [betType, setBetType] = useState("perming");
+  const { selectedMatches, setSelectedMatches, betType, setBetType } = useMatchStore();
+  const [stake, setStake] = useState("0.0");
+
+  const handleBetTypeChange = (value: string) => {
+    setBetType(value as "perming" | "nap");
+  };
+
+  const isNap = betType === "nap";
+  const minSelections = 3;
+  const maxSelectionsNap = 3;
+  const maxSelectionsPerming = 15;
+  const selectionCountValid = selectedMatches.length >= minSelections;
+  const napCountValid = !isNap || selectedMatches.length === maxSelectionsNap;
+  const napOverLimit = isNap && selectedMatches.length > maxSelectionsNap;
+  const canSubmit =
+    selectionCountValid &&
+    napCountValid &&
+    Number(stake) >= 100 &&
+    Number(stake) <= 5000000 &&
+    !isPlacingBet;
+ 
+
+
   const handleQuickStake = (amount: number) => {
     setStake(amount.toString());
   };
@@ -26,10 +46,14 @@ export default function Betslip() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (selectedMatches.length === 0) return toast.error("Please select at least one match");
+    if (selectedMatches.length < minSelections)
+      return toast.error(`Select at least ${minSelections} games`);
+    if (isNap && selectedMatches.length !== maxSelectionsNap)
+      return toast.error("Nap requires exactly 3 games");
+    if (!isNap && selectedMatches.length > maxSelectionsPerming)
+      return toast.error(`Perming allows up to ${maxSelectionsPerming} games`);
     if (Number(stake) < 100) return toast.error("Minimum stake is 100");
     if (Number(stake) > 5000000) return toast.error("Maximum stake is 5,000,000");
-    if (!betType) return toast.error("Please select a bet type");
     if (isPlacingBet) return toast.error("Please wait for the bet to be placed");
     placeBet(selectedMatches, Number(stake), betType);
   }
@@ -57,10 +81,16 @@ export default function Betslip() {
         </form> */}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-amber-500/10 text-amber-600 border border-amber-500/10 rounded p-4 md:p-2 text-xs space-y-2 md:space-y-1">
-            <div className="flex items-center justify-between gap-4">
+          <div className="bg-primary/10 text-primary border border-primary/10 rounded p-4 md:p-2 text-xs space-y-2 md:space-y-1">
+            <div className="font-semibold mb-1">Instructions</div>
+            <ul className="list-disc list-inside space-y-0.5">
+              <li><strong>Perming:</strong> Select 3 to 15 games.</li>
+              <li><strong>Nap:</strong> Select exactly 3 games only.</li>
+              <li>Less than 3 games is invalid for both types.</li>
+            </ul>
+            <div className="flex items-center justify-between gap-4 pt-1">
               <span>Maximum Selections:</span>
-              <span className="font-semibold">15 games</span>
+              <span className="font-semibold">{isNap ? "3 games" : "15 games"}</span>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -72,6 +102,22 @@ export default function Betslip() {
               <span className="font-semibold">&#8358; 5,000,000</span>
             </div>
           </div>
+
+          <SelectWithoutIcon
+            label="Bet Type"
+            options={[
+              { value: "perming", label: "Perming" },
+              { value: "nap", label: "Nap" },
+            ]}
+            value={betType}
+            onChange={(e) => handleBetTypeChange(e.target.value)}
+          />
+
+          {napOverLimit && (
+            <div className="bg-red-500/10 text-red-600 border border-red-500/20 rounded p-3 text-xs">
+              Remove {selectedMatches.length - maxSelectionsNap} game(s) to place a Nap. Nap requires exactly 3 games.
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="" className="text-sm text-muted font-medium">
@@ -99,15 +145,7 @@ export default function Betslip() {
             )}
           </div>
 
-          <SelectWithoutIcon
-            label="Bet Type"
-            options={[
-              { value: "perming", label: "Perming" },
-              { value: "nap", label: "Nap" },
-            ]}
-            value={betType}
-            onChange={(e) => setBetType(e.target.value)}
-          />
+        
           <div className="space-y-2">
             <InputWithoutIcon
               type="number"
@@ -140,6 +178,7 @@ export default function Betslip() {
             className="w-full btn-primary h-[43px] rounded disabled:opacity-50 disabled:pointer-events-none"
             loading={isPlacingBet}
             type="submit"
+            disabled={!canSubmit}
           />
         </form>
       </div>

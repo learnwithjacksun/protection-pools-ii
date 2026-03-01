@@ -3,8 +3,20 @@ import { CheckCircle, Circle } from "lucide-react";
 import { useMatchStore } from "@/store";
 
 export default function MatchCard({ match }: { match: IMatch }) {
-  const { selectedMatches, setSelectedMatches } = useMatchStore();
+  const { selectedMatches, setSelectedMatches, betType } = useMatchStore();
   const isSelected = selectedMatches.some((m) => m.id === match.id);
+  const isNap = betType === "nap";
+  const atNapLimit = isNap && selectedMatches.length >= 3;
+  const canAdd = !atNapLimit || isSelected;
+
+  const handleToggle = () => {
+    if (isSelected) {
+      setSelectedMatches(selectedMatches.filter((m) => m.id !== match.id));
+    } else {
+      if (!canAdd) return;
+      setSelectedMatches([...selectedMatches, match]);
+    }
+  };
   return (
     <div
       key={match.id}
@@ -48,17 +60,13 @@ export default function MatchCard({ match }: { match: IMatch }) {
         </div>
 
         <div
-          onClick={() =>
-            setSelectedMatches(
-              isSelected
-                ? selectedMatches.filter((m) => m.id !== match.id)
-                : [...selectedMatches, match],
-            )
-          }
+          onClick={handleToggle}
           className={clsx(
             "text-xs flex items-center gap-1 cursor-pointer bg-gray-200 text-gray-600 rounded p-2",
             isSelected && "bg-primary text-white",
+            !canAdd && "opacity-60 cursor-not-allowed",
           )}
+          title={!canAdd ? "Nap allows only 3 games. Remove a selection or change bet type to Perming." : undefined}
         >
          {isSelected ? "Selected" : "Select"} {isSelected ? <CheckCircle size={16} /> : <Circle size={16} />}
         </div>

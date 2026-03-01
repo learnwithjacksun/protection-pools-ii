@@ -187,7 +187,9 @@ export const deleteBet = async (req, res) => {
 export const getBetByBookingCode = async (req, res) => {
   const { bookingCode } = req.params;
   try {
-    const bet = await BetModel.findOne({ bookingCode });
+    const bet = await BetModel.findOne({ bookingCode })
+      .populate("user", "name phone email")
+      .populate("matches");
     if (!bet) {
       return res.status(404).json({
         success: false,
