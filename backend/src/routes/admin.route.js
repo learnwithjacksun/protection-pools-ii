@@ -4,10 +4,8 @@ import { getCurrentWeek, updateData } from "../controllers/admin.js"
 
 const adminRouter = Router()
 
-adminRouter.use(authMiddleware)
-
 adminRouter.get("/", getCurrentWeek)
-adminRouter.patch("/:id", updateData)
+adminRouter.patch("/:id", authMiddleware, updateData)
 
 
 export default adminRouter
