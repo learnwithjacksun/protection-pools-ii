@@ -7,17 +7,27 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type RegisterSchema, registerSchema } from "@/schemas/auth";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks";
 
 export default function Register() {
   const [isAgree, setIsAgree] = useState(false);
-  const {register, handleSubmit, formState: {errors}} = useForm<RegisterSchema>({
-    resolver: zodResolver(registerSchema)
-  })
+  const { register: registerUser, loading } = useAuth();
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterSchema>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
   const onSubmit = (data: RegisterSchema) => {
-    if(!isAgree) return toast.error("Please agree to the terms and conditions");
-    console.log(data);
-  }
+    if (!isAgree) return toast.error("Please agree to the terms and conditions");
+    registerUser(data);
+  };
+
   return (
     <AuthLayout
       title="Join the Protection Pool"
@@ -77,6 +87,7 @@ export default function Register() {
         <ButtonWithLoader
           initialText="Register"
           loadingText="Loading..."
+          loading={loading}
           type="submit"
           className="w-full btn-primary h-11 rounded-lg"
         />

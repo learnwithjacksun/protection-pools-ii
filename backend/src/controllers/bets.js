@@ -5,10 +5,18 @@ import generateRandomNumber from "../utils/generateRandomNumbers.js";
 
 // Place a new bet
 export const placeBet = async (req, res) => {
-  const { matches, stakeAmount, betType } = req.body;
+  const { matches, stakeAmount, betType, week } = req.body;
   const userId = req.user.id;
 
   try {
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
     // Validate required fields
     if (!matches || !Array.isArray(matches) || matches.length === 0) {
       return res.status(400).json({
@@ -24,39 +32,38 @@ export const placeBet = async (req, res) => {
       });
     }
 
-    if (!betType || !["Perming", "Nap"].includes(betType)) {
+    if (!betType || !["perming", "nap"].includes(betType)) {
       return res.status(400).json({
         success: false,
-        message: "Valid bet type is required",
+        message: "Valid bet type is required (perming, nap)",
       });
     }
+
+    // Normalize matches to array of ObjectIds (accept either IDs or full objects)
+    const matchIds = matches.map((m) =>
+      typeof m === "object" && m !== null && (m.id ?? m._id) ? (m.id ?? m._id) : m
+    );
 
     const bookingCode = `BK${generateRandomNumber(6)}`;
 
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+
 
     // Create bet (no wallet check needed - pool system)
     const bet = await BetModel.create({
       user: userId,
+      week,
       bookingCode,
-      matches,
+      matches: matchIds,
       stakeAmount,
       betType,
-      status: "pending",
     });
 
- 
+
 
     res.status(201).json({
       success: true,
       message: "Bet placed successfully",
-      bet,
+      data: bet,
     });
   } catch (error) {
     onError(res, error);
@@ -64,25 +71,22 @@ export const placeBet = async (req, res) => {
 };
 
 // Get all bets for the authenticated user
-export const getBets = async (req, res) => {
+export const getUserBets = async (req, res) => {
   const userId = req.user.id;
-  const { status } = req.query; // Optional filter by status
 
   try {
     const query = { user: userId };
-    if (status && ["pending", "won", "lost", "cancelled"].includes(status)) {
-      query.status = status;
-    }
+
 
     const bets = await BetModel.find(query)
       .sort({ createdAt: -1 })
-      .populate("user", "username email")
+      .populate("user", "name phone email")
       .populate("matches");
 
     res.status(200).json({
       success: true,
       message: "Bets fetched successfully",
-      bets,
+      data: bets,
       count: bets.length,
     });
   } catch (error) {
@@ -90,48 +94,36 @@ export const getBets = async (req, res) => {
   }
 };
 
-// Get a single bet by ID
-export const getBetById = async (req, res) => {
-  const { id } = req.params;
-  const userId = req.user.id;
-
+export const getAllBets = async (_, res) => {
   try {
-    const bet = await BetModel.findOne({ _id: id, user: userId })
-      .populate("user", "username email")
-      .populate("matches");
-
-    if (!bet) {
-      return res.status(404).json({
-        success: false,
-        message: "Bet not found",
-      });
-    }
-
+    const bets = await BetModel.find();
     res.status(200).json({
       success: true,
-      message: "Bet fetched successfully",
-      bet,
+      message: "Bets fetched successfully",
+      data: bets,
+      count: bets.length,
     });
   } catch (error) {
     onError(res, error);
   }
 };
 
-// Update bet status (typically for admin use, but can be used for cancellation)
+
+
 export const updateBetStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
-  const userId = req.user.id;
+
 
   try {
-    if (!status || !["pending", "won", "lost", "cancelled"].includes(status)) {
+    if (!status || !["awaiting", "done"].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Valid status is required (pending, won, lost, cancelled)",
+        message: "Valid status is required (awaiting, done)",
       });
     }
 
-    const bet = await BetModel.findOne({ _id: id, user: userId });
+    const bet = await BetModel.findById(id);
     if (!bet) {
       return res.status(404).json({
         success: false,
@@ -139,47 +131,32 @@ export const updateBetStatus = async (req, res) => {
       });
     }
 
-    // If bet is already settled, don't allow changes unless cancelling
-    if (bet.status !== "pending" && status !== "cancelled") {
+    if (bet.status === "done") {
       return res.status(400).json({
         success: false,
-        message: "Cannot change status of a settled bet",
+        message: "Bet is already completed",
       });
     }
 
-    const oldStatus = bet.status;
     bet.status = status;
-
-    // Handle wallet updates based on status change
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // No wallet updates needed - pool system
 
     await bet.save();
 
     res.status(200).json({
       success: true,
       message: "Bet status updated successfully",
-      bet,
+      data: bet,
     });
   } catch (error) {
     onError(res, error);
   }
 };
 
-// Cancel a pending bet (user can cancel their own pending bets)
-export const cancelBet = async (req, res) => {
+export const deleteBet = async (req, res) => {
   const { id } = req.params;
-  const userId = req.user.id;
 
   try {
-    const bet = await BetModel.findOne({ _id: id, user: userId });
+    const bet = await BetModel.findById(id);
     if (!bet) {
       return res.status(404).json({
         success: false,
@@ -187,30 +164,40 @@ export const cancelBet = async (req, res) => {
       });
     }
 
-    if (bet.status !== "pending") {
+    if (bet.status !== "awaiting") {
       return res.status(400).json({
         success: false,
-        message: "Only pending bets can be cancelled",
+        message: "Only awaiting bets can be deleted",
       });
     }
 
-    // Refund stake to user
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    bet.status = "cancelled";
-
-    await bet.save();
+    await bet.deleteOne();
 
     res.status(200).json({
       success: true,
-      message: "Bet cancelled successfully",
-      bet,
+      message: "Bet deleted successfully",
+    });
+  } catch (error) {
+    onError(res, error);
+  }
+};
+
+
+// get bet by booking code
+export const getBetByBookingCode = async (req, res) => {
+  const { bookingCode } = req.params;
+  try {
+    const bet = await BetModel.findOne({ bookingCode });
+    if (!bet) {
+      return res.status(404).json({
+        success: false,
+        message: "Bet not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Bet found successfully",
+      data: bet,
     });
   } catch (error) {
     onError(res, error);

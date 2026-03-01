@@ -4,19 +4,19 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type LoginSchema, loginSchema } from "@/schemas/auth";
+import { useAuth } from "@/hooks";
 
 export default function Login() {
-    const {register, handleSubmit, formState: {errors}} = useForm<LoginSchema>({
-        resolver: zodResolver(loginSchema),
-        defaultValues: {
-            phone: "",
-            password: "",
-        },
-    })
+  const { login, loading } = useAuth();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { phone: "", password: "" },
+  });
 
-    const onSubmit = (data: LoginSchema) => {
-        console.log(data);
-    }
+  const onSubmit = (data: LoginSchema) => {
+    login(data);
+  };
+
   return (
     <AuthLayout
       title="Welcome Back"
@@ -47,6 +47,7 @@ export default function Login() {
         <ButtonWithLoader
           initialText="Login"
           loadingText="Loading..."
+          loading={loading}
           type="submit"
           className="w-full btn-primary h-11 rounded-lg"
         />

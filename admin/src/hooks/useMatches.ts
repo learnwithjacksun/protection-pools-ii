@@ -20,11 +20,11 @@ export default function useMatches() {
     }
   };
 
-  const createMatch = async (data: CreateMatchSchema, isAvailable: boolean) => {
+  const createMatch = async (data: CreateMatchSchema, isAvailable: boolean, week: number) => {
     setIsCreating(true);
     try {
       const payload = {
-        week: data.week,
+        week: Number(week),
         homeTeam: data.homeTeam,
         awayTeam: data.awayTeam,
         isAvailable,
@@ -52,11 +52,12 @@ export default function useMatches() {
     data: EditMatchSchema,
     isAvailable: boolean,
     status: string,
+    week: number,
   ) => {
     setIsUpdating(true);
     try {
       const payload = {
-        week: data.week,
+        week: Number(week),
         homeTeam: data.homeTeam,
         awayTeam: data.awayTeam,
         homeScore: data.homeScore,

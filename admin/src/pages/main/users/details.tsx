@@ -1,5 +1,5 @@
 import { ButtonWithLoader, GoBack, InputWithoutIcon } from "@/components/ui";
-import { useUsers } from "@/hooks";
+import { useBets, useUsers } from "@/hooks";
 import { DashboardLayout } from "@/layouts";
 import { editUserSchema, type EditUserSchema } from "@/schemas/user";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,7 @@ import { useParams } from "react-router-dom";
 
 export default function UserDetails() {
   const { id } = useParams();
+  const { bets } = useBets();
   const { users, updateUser, isLoading, deleteUser, isDeleting } = useUsers();
   const user = users?.find((user) => user.id === id);
   const [isActive, setIsActive] = useState(false);
@@ -42,7 +43,7 @@ export default function UserDetails() {
       setIsActive(user.isActive);
       setIsAdmin(user.isAdmin);
     }
-  }, [user]);
+  }, [reset, user]);
 
   const handleDeleteUser = (id: string) => {
     const confirm = window.confirm(
@@ -52,6 +53,8 @@ export default function UserDetails() {
       deleteUser(id);
     }
   };
+  const userBets = bets?.filter((bet) => bet?.user === id);
+
   return (
     <DashboardLayout>
       <GoBack title="User Details" />
@@ -59,7 +62,7 @@ export default function UserDetails() {
       <div className="wrapper bg-white p-4 rounded flex items-center justify-between">
         <div className="space-y-2">
           <p className="text-sm">Total Bets</p>
-          <h3 className="text-3xl font-semibold">4</h3>
+          <h3 className="text-3xl font-semibold">{userBets?.length}</h3>
         </div>
         <div className=" gap-4 bg-violet-500/10 h-14 w-14 center rounded">
           <Ticket size={24} className="text-violet-500" />

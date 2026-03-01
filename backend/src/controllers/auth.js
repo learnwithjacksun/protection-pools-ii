@@ -7,10 +7,10 @@ import envFile from "../config/env.js";
 import UserModel from "../model/user.js";
 import sendEmail from "../config/email.js";
 import { welcomeEmail } from "../template/welcomeEmail.js";
+import { resetPasswordEmail } from "../template/resetPasswordEmail.js";
 
 export const register = async (req, res) => {
   const { name, email, phone, password } = req.body;
-
   try {
     if (!name || !email || !phone || !password) {
       return res.status(400).json({
@@ -112,10 +112,26 @@ export const login = async (req, res) => {
 
     // Check if email is verified
     if (!user.isVerified) {
+      const otp = generateRandomNumber(6);
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      user.otp = otp;
+      user.otpExpiresAt = otpExpiresAt;
+      await user.save();
+      await sendEmail(
+        "Welcome to Protection Pool - Verify Your Email",
+        welcomeEmail({
+          username: user.name,
+          email: user.email,
+          otp: otp,
+        }),
+        user.email,
+        user.name,
+      );
       return res.status(403).json({
         success: false,
         message: "Please verify your email address before logging in",
         requiresVerification: true,
+        data: user,
       });
     }
 
@@ -279,8 +295,17 @@ export const forgotPassword = async (req, res) => {
     user.secretKeyExpiresAt = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
-    // In production, send email with reset link
-    // For now, just return success (you can integrate with email service)
+    try {
+      await sendEmail(
+        "Reset Your Password - Protection Pools",
+        resetPasswordEmail(user.name, user.email, resetToken),
+        user.email,
+        user.name,
+      );
+    } catch (emailErr) {
+      console.error("Failed to send reset email:", emailErr);
+    }
+
     res.status(200).json({
       success: true,
       message: "If email exists, a password reset link will be sent",
@@ -306,6 +331,7 @@ export const resetPassword = async (req, res) => {
       decoded = jwt.verify(token, envFile.JWT_SECRET);
     } catch (error) {
       onError(res, error);
+      return;
     }
 
     const user = await UserModel.findById(decoded.id);
@@ -340,18 +366,18 @@ export const resetPassword = async (req, res) => {
 
 // Verify OTP
 export const verifyOtp = async (req, res) => {
-  const { otp } = req.body;
-  const userId = req.user?.id;
+  const { otp, email } = req.body;
+  
 
   try {
-    if (!otp || otp.length !== 6) {
+    if (!otp || otp.length !== 6 || !email) {
       return res.status(400).json({
         success: false,
         message: "Valid 6-digit OTP is required",
       });
     }
 
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -386,6 +412,18 @@ export const verifyOtp = async (req, res) => {
     user.otpExpiresAt = undefined;
     await user.save();
 
+    const token = jwt.sign({ id: user.id }, envFile.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    // Set cookie with token
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
@@ -398,24 +436,16 @@ export const verifyOtp = async (req, res) => {
 
 // Resend OTP
 export const resendOtp = async (req, res) => {
-  const userId = req.user?.id;
+  const { email } = req.body;
 
   try {
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    if (user.isVerified) {
       return res.status(400).json({
         success: false,
-        message: "Email is already verified",
+        message: "Email not found",
       });
     }
-
     // Generate new 6-digit OTP
     const otp = generateRandomNumber(6);
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -429,12 +459,12 @@ export const resendOtp = async (req, res) => {
       await sendEmail(
         "Protection Pool - New Verification Code",
         welcomeEmail({
-          username: user.username,
+          username: user.name,
           email: user.email,
           otp: otp,
         }),
         user.email,
-        user.username,
+        user.name,
       );
     } catch (emailError) {
       console.error("Failed to send OTP email:", emailError);

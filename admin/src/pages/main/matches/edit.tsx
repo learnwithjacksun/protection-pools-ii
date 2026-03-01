@@ -3,19 +3,19 @@ import {
   ButtonWithLoader,
   GoBack,
   InputWithoutIcon,
-  SelectWithoutIcon,
 } from "@/components/ui";
-import { weeks } from "@/constants/data";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type EditMatchSchema, editMatchSchema } from "@/schemas/matches";
 import { useParams } from "react-router-dom";
-import { useMatches } from "@/hooks";
+import { useAdmin, useMatches } from "@/hooks";
+import { Calendar } from "iconsax-reactjs";
 
 export default function EditMatch() {
   const { id } = useParams();
+  const { admin } = useAdmin();
   const { updateMatch, isUpdating, matches } = useMatches();
   const [isAvailable, setIsAvailable] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -37,13 +37,12 @@ export default function EditMatch() {
   });
   const onSubmit = (data: EditMatchSchema) => {
     const status = isCompleted ? "completed" : "pending";
-    updateMatch(id!, data, isAvailable, status);
+    updateMatch(id!, data, isAvailable, status, admin?.currentWeek ?? 0);
   };
 
   useEffect(() => {
     if (match) {
       reset({
-        week: match.week.toString(),
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
         homeScore: match.homeScore.toString(),
@@ -52,21 +51,25 @@ export default function EditMatch() {
       setIsAvailable(match.isAvailable ? true : false);
       setIsCompleted(match.status.toLowerCase() === "completed" ? true : false);
     }
-  }, [match]);
+  }, [match, reset]);
 
   return (
     <DashboardLayout>
       <GoBack title="Edit Match" />
+      <div className="wrapper bg-white p-4 rounded flex items-center justify-between">
+        <div className="space-y-2">
+          <p className="text-sm">Current Week</p>
+          <h3 className="text-3xl font-semibold">{admin?.currentWeek}</h3>
+        </div>
+        <div className=" gap-4 bg-primary/10 h-14 w-14 center rounded">
+          <Calendar size={24} className="text-primary" />
+        </div>
+      </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="wrapper space-y-6 bg-white border border-line p-4 md:p-6 rounded-lg"
       >
-        <SelectWithoutIcon
-          label="Week"
-          options={weeks}
-          {...register("week")}
-          error={errors.week?.message}
-        />
+       
         <InputWithoutIcon
           label="Home Team"
           placeholder="e.g Arsenal FC"

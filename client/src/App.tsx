@@ -10,8 +10,16 @@ import {
   Verify,
 } from "./pages/auth";
 import { Bets, Results, Stakes } from "./pages/main";
+import { useAuth } from "@/hooks";
+import { useEffect } from "react";
 
 export default function App() {
+  const { checkAuth } = useAuth();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   return (
     <>
       <ScrollToTop />

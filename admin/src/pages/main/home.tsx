@@ -2,15 +2,16 @@ import { PlusCircle, Volleyball } from "lucide-react";
 import { DashboardLayout } from "@/layouts";
 import { Calendar, Profile2User, Setting2, Ticket } from "iconsax-reactjs";
 import { Link } from "react-router-dom";
-import { useAdmin, useMatches, useUsers } from "@/hooks";
+import { useAdmin, useBets, useMatches, useUsers } from "@/hooks";
 import { ButtonWithLoader, InputWithoutIcon } from "@/components/ui";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const { users } = useUsers();
   const { matches } = useMatches();
-  const { admin, isUpdating, updateData } = useAdmin();
-  const currentWeek = admin?.currentWeek ?? "";
+  const { bets } = useBets();
+  const { admin, isLoading, isError, isUpdating, updateData } = useAdmin();
+  const currentWeek = admin?.currentWeek;
   const statCards = [
     {
       title: "Total Users",
@@ -21,7 +22,7 @@ export default function Home() {
     },
     {
       title: "Total Bets",
-      value: 0,
+      value: bets?.length,
       icon: Ticket,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
@@ -35,7 +36,12 @@ export default function Home() {
     },
     {
       title: "Week",
-      value: currentWeek === "" ? "—" : currentWeek,
+      value:
+        isLoading
+          ? "…"
+          : currentWeek !== undefined && currentWeek !== null
+            ? currentWeek
+            : "—",
       icon: Calendar,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
@@ -44,15 +50,15 @@ export default function Home() {
 
   const [week, setWeek] = useState("");
   useEffect(() => {
-    if (currentWeek !== "") {
-      setWeek(String(currentWeek));
+    if (admin?.currentWeek !== undefined && admin.currentWeek !== null) {
+      setWeek(String(admin.currentWeek));
     }
-  }, [currentWeek]);
+  }, [admin?.currentWeek]);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!admin?.id) return;
     const weekNumber = Number(week);
-    if (!Number.isFinite(weekNumber)) return;
+    if (!Number.isInteger(weekNumber) || weekNumber < 0) return;
     updateData(weekNumber, admin.id);
   };
 
@@ -149,6 +155,12 @@ export default function Home() {
           </p>
         </div>
 
+        {isError && (
+          <p className="text-sm text-red-500">
+            Failed to load week. Please refresh the page.
+          </p>
+        )}
+
         <form
           onSubmit={handleSubmit}
           className="bg-white border border-line rounded p-4 space-y-6 max-w-md"
@@ -160,13 +172,21 @@ export default function Home() {
             placeholder="Update match week"
             value={week}
             onChange={(e) => setWeek(e.target.value)}
+            min={0}
           />
           <ButtonWithLoader
             initialText="Update"
             loadingText="Updating..."
             loading={isUpdating}
             type="submit"
-            disabled={isUpdating || !admin?.id || week === ""}
+            disabled={
+              isUpdating ||
+              isLoading ||
+              !admin?.id ||
+              week === "" ||
+              !Number.isInteger(Number(week)) ||
+              Number(week) < 0
+            }
             className="w-full h-10 btn-primary rounded"
           />
         </form>

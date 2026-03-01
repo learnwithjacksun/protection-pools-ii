@@ -7,6 +7,10 @@ const betSchema = new Schema(
       ref: "User",
       required: true,
     },
+    week: {
+      type: Number,
+      required: true,
+    },
     matches: {
       type: [
         {
@@ -16,7 +20,6 @@ const betSchema = new Schema(
         },
       ],
     },
-
     bookingCode: {
       type: String,
       required: true,
@@ -28,13 +31,13 @@ const betSchema = new Schema(
     betType: {
       type: String,
       required: true,
-      enum: ["Perming", "Nap"],
+      enum: ["perming", "nap"],
     },
     status: {
       type: String,
       required: true,
-      default: "pending",
-      enum: ["pending", "won", "lost", "cancelled"],
+      default: "awaiting",
+      enum: ["awaiting", "done"],
     },
   },
   {

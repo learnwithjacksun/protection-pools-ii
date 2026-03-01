@@ -4,12 +4,16 @@ import { Menu, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import MobileBar from "./mobilebar";
+import { useAuth } from "@/hooks";
+import { ButtonWithLoader } from "../ui";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout, loading } = useAuth();
+
   return (
     <>
-      <header className="sticky top-0 z-20 w-full bg-background backdrop-blur">
+      <header className="sticky top-0 z-20 w-full bg-background backdrop-blur border-b border-line">
         <nav className="main flex items-center justify-between">
           <Link to="/" className="text-nowrap md:text-xl font-semibold">
             Protection <span className="text-primary-2">Pools</span>.
@@ -34,10 +38,29 @@ export default function Header() {
                 </li>
               ))}
             </ul>
-            <Link to="/login" className="btn text-primary underline py-4">
-              <UserRound size={19} />
-              Account
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 center text-xl font-semibold rounded-full bg-primary text-white">
+                  {user.name.split(" ")[0].charAt(0).toUpperCase()}
+                </div>
+                <div className="hidden lg:block">
+                  <ButtonWithLoader
+                    initialText="Logout"
+                    loadingText="Logging out..."
+                    loading={loading}
+                    onClick={() => {
+                      logout();
+                    }}
+                    className="btn bg-red-600/10 text-red-600 h-10 px-4 rounded"
+                  />
+                </div>
+              </div>
+            ) : (
+              <Link to="/login" className="btn text-primary underline py-4 flex items-center gap-2">
+                <UserRound size={19} />
+                Account
+              </Link>
+            )}
 
             <div
               onClick={() => setIsOpen(true)}

@@ -4,7 +4,7 @@ import { onError } from "../utils/onError.js";
 export const getCurrentWeek = async (req, res) => {
   try {
     const adminData = await AdminModel.find();
-    if (!adminData) {
+    if (!adminData?.length) {
       return res.status(404).json({
         success: false,
         message: "Data not found",
@@ -25,6 +25,13 @@ export const updateData = async (req, res) => {
   const { week } = req.body;
   const id = req.params.id;
   try {
+    const weekNumber = Number(week);
+    if (!Number.isInteger(weekNumber) || weekNumber < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Week must be a non-negative integer",
+      });
+    }
     const admin = await AdminModel.findById(id);
     if (!admin) {
       return res.status(404).json({
@@ -32,7 +39,7 @@ export const updateData = async (req, res) => {
         message: "Data not found",
       });
     }
-    admin.currentWeek = week;
+    admin.currentWeek = weekNumber;
     await admin.save();
     res.status(200).json({
       success: true,
@@ -40,10 +47,6 @@ export const updateData = async (req, res) => {
       data: admin.currentWeek,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "internal server error",
-    });
+    onError(res, error);
   }
 };

@@ -6,18 +6,32 @@ import {
   SelectWithoutIcon,
 } from "../ui";
 import { useState } from "react";
+import { useBets } from "@/hooks";
+import { toast } from "sonner";
 
 const QUICK_STAKE_AMOUNTS = [100, 500, 1000, 5000, 10000];
 
 export default function Betslip() {
+  const { placeBet, isPlacingBet } = useBets();
   const { selectedMatches, setSelectedMatches } = useMatchStore();
   const [stake, setStake] = useState("0.0")
+  const [betType, setBetType] = useState("perming");
   const handleQuickStake = (amount: number) => {
     setStake(amount.toString());
   };
-  const removeSelection = (id:string)=>{
+  const removeSelection = (id: string) => {
     const selections = selectedMatches.filter(x => x.id !== id)
     setSelectedMatches(selections)
+  }
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (selectedMatches.length === 0) return toast.error("Please select at least one match");
+    if (Number(stake) < 100) return toast.error("Minimum stake is 100");
+    if (Number(stake) > 5000000) return toast.error("Maximum stake is 5,000,000");
+    if (!betType) return toast.error("Please select a bet type");
+    if (isPlacingBet) return toast.error("Please wait for the bet to be placed");
+    placeBet(selectedMatches, Number(stake), betType);
   }
   return (
     <div className="bg-white">
@@ -42,7 +56,7 @@ export default function Betslip() {
           />
         </form> */}
 
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-amber-500/10 text-amber-600 border border-amber-500/10 rounded p-4 md:p-2 text-xs space-y-2 md:space-y-1">
             <div className="flex items-center justify-between gap-4">
               <span>Maximum Selections:</span>
@@ -76,8 +90,8 @@ export default function Betslip() {
                     <div className="flex-1 text-sm">
                       <span className="truncate text-nowrap">{x.homeTeam}</span> : <span className="truncate text-nowrap">{x.awayTeam}</span>
                     </div>
-                    <button onClick={()=> removeSelection(x.id)} type="button" className="text-red-600">
-                      <X size={18}/>
+                    <button onClick={() => removeSelection(x.id)} type="button" className="text-red-600">
+                      <X size={18} />
                     </button>
                   </div>
                 ))}
@@ -91,6 +105,8 @@ export default function Betslip() {
               { value: "perming", label: "Perming" },
               { value: "nap", label: "Nap" },
             ]}
+            value={betType}
+            onChange={(e) => setBetType(e.target.value)}
           />
           <div className="space-y-2">
             <InputWithoutIcon
@@ -99,19 +115,18 @@ export default function Betslip() {
               placeholder="200"
               name="stake"
               value={stake}
-              onChange={(e)=>setStake(e.target.value)}
+              onChange={(e) => setStake(e.target.value)}
             />
             <div className="flex flex-wrap gap-2">
               {QUICK_STAKE_AMOUNTS.map((amount) => (
                 <button
-                type="button"
+                  type="button"
                   key={amount}
                   onClick={() => handleQuickStake(amount)}
-                  className={`px-3 py-1 rounded font-space font-medium text-xs transition-all ${
-                    stake === amount.toString()
+                  className={`px-3 py-1 rounded font-space font-medium text-xs transition-all ${stake === amount.toString()
                       ? "bg-primary text-white border border-primary"
                       : "bg-foreground border border-line text-main hover:border-primary/30 hover:bg-primary/5"
-                  }`}
+                    }`}
                 >
                   &#8358;{amount}
                 </button>
@@ -120,9 +135,11 @@ export default function Betslip() {
           </div>
 
           <ButtonWithLoader
-initialText="Stake Now"
-loadingText="Staking..."
-className="w-full btn-primary h-[43px] rounded"
+            initialText="Stake Now"
+            loadingText="Staking..."
+            className="w-full btn-primary h-[43px] rounded disabled:opacity-50 disabled:pointer-events-none"
+            loading={isPlacingBet}
+            type="submit"
           />
         </form>
       </div>

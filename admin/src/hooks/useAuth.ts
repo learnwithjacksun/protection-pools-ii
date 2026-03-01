@@ -37,7 +37,7 @@ export default function useAuth() {
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setLoading(true);
     try {
       await api.post("/auth/logout");
@@ -55,7 +55,7 @@ export default function useAuth() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, setUser]);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -70,7 +70,7 @@ export default function useAuth() {
       await logout();
       return null;
     }
-  }, [setUser]);
+  }, [logout, setUser]);
 
   const changePassword = async (
     currentPassword: string,

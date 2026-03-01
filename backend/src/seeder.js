@@ -1,5 +1,6 @@
 import connectDB from "./config/database.js";
 import AdminModel from "./model/admin.js";
+import process from "process";
 
 connectDB();
 

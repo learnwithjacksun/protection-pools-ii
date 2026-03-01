@@ -62,3 +62,15 @@ interface IUser {
   isActive: boolean;
   isAdmin: boolean
 }
+
+interface IBet {
+  id: string;
+  user: IUser;
+  week: number;
+  matches: IMatch[];
+  bookingCode: string;
+  stakeAmount: number;
+  betType: string;
+  status: string;
+  createdAt?: string;
+}

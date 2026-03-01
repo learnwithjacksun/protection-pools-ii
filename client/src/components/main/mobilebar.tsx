@@ -4,6 +4,7 @@ import { NavLink, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { navbarItems } from "@/constants/data";
 import { ButtonWithLoader } from "../ui";
+import { useAuth } from "@/hooks";
 
 interface MobileBarProps {
   isOpen: boolean;
@@ -11,11 +12,7 @@ interface MobileBarProps {
 }
 
 export default function MobileBar({ isOpen, onClose }: MobileBarProps) {
-  const logout = () => {};
-  const user = {
-    name: "Samuel Ema",
-    email: "samuelema@mail.com",
-  };
+  const { user, logout, loading } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -30,13 +27,13 @@ export default function MobileBar({ isOpen, onClose }: MobileBarProps) {
   }, [isOpen]);
 
   const getUserInitials = () => {
-    if (!user) return "";
-    const name = user.name || "";
+    if (!user?.name) return "";
+    const name = user.name;
     const initials = name
       .split(" ")
       .map((n) => n[0])
       .join("");
-    return initials.toUpperCase();
+    return initials.toUpperCase().slice(0, 2);
   };
   return (
     <div className="fixed inset-0 z-50">
@@ -52,7 +49,7 @@ export default function MobileBar({ isOpen, onClose }: MobileBarProps) {
         initial={{ opacity: 0, scaleX: 0 }}
         animate={{ opacity: 1, scaleX: 1 }}
         exit={{ opacity: 0, scaleX: 0 }}
-        className="w-[70%] origin-left relative h-[100dvh] bg-white z-100 rounded-tr-3xl rounded-br"
+        className="w-[70%] origin-left relative h-[100dvh] bg-white z-100"
       >
         <header className="flex items-center justify-between h-[70px] px-4">
           <div className="md:h-12 md:w-12 h-10 w-10 center">
@@ -91,40 +88,38 @@ export default function MobileBar({ isOpen, onClose }: MobileBarProps) {
         </ul>
 
         <div className="mt-auto w-[90%] mx-auto space-y-2 mb-4 absolute bottom-0 left-0 right-0">
-          {!user && (
+          {!user ? (
             <>
               <Link
-                to="/auth/login"
+                to="/login"
                 onClick={onClose}
                 className="btn text-sm h-12 border border-line text-main w-full rounded flex items-center justify-center"
               >
                 Login
               </Link>
               <Link
-                to="/auth/register"
+                to="/register"
                 onClick={onClose}
                 className="btn btn-primary text-sm h-12 w-full rounded flex items-center justify-center"
               >
                 Register
               </Link>
             </>
-          )}
-
-          {user && (
+          ) : (
             <>
               <div className="flex items-center gap-3 p-4 bg-foreground rounded-lg mb-2">
                 <div className="h-10 w-10 min-w-10 min-h-10 center rounded-full bg-primary overflow-hidden text-white font-medium">
                   {getUserInitials()}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-main">{user.name}</p>
-                  <p className="text-sm text-muted">{user.email}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-main truncate">{user.name}</p>
+                  <p className="text-sm text-muted truncate">{user.email}</p>
                 </div>
               </div>
               <ButtonWithLoader
                 initialText="Logout"
                 loadingText="Logging out..."
-                loading={false}
+                loading={loading}
                 onClick={() => {
                   logout();
                   onClose();

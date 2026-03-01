@@ -1,22 +1,23 @@
-import { Search, Loader } from "lucide-react";
+import { Search, Loader, CalendarX2 } from "lucide-react";
 import { useState } from "react";
 import MatchCard from "./match-card";
-import { useMatches } from "@/hooks";
+import { useAdmin, useMatches } from "@/hooks";
 
 export default function Matches() {
+  const { admin } = useAdmin();
   const { matches, fetchingMatches} = useMatches();
   const [search, setSearch] = useState("");
 
   const searchTerm = search.toLowerCase().trim();
 
   const filteredMatches = matches?.filter((match) => {
-   
-
+    const matchesCurrentWeek =
+      admin?.currentWeek === undefined || match.week === admin.currentWeek;
     const matchesSearch =
       match.homeTeam.toLowerCase().includes(searchTerm) ||
       match.awayTeam.toLowerCase().includes(searchTerm);
 
-    return matchesSearch;
+    return matchesCurrentWeek && matchesSearch;
   });
 
   return (
@@ -33,6 +34,15 @@ export default function Matches() {
         />
       </div>
 
+      <div className=" bg-white p-4 rounded flex items-center justify-between">
+        <div className="space-y-2">
+          <p className="text-sm">Current Week</p>
+          <h3 className="text-3xl font-semibold">{admin?.currentWeek}</h3>
+        </div>
+        <div className=" gap-4 bg-primary/10 h-14 w-14 center rounded">
+          <CalendarX2 size={24} className="text-primary" />
+        </div>
+      </div>
       
 
       {fetchingMatches && (
