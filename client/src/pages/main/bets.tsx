@@ -39,9 +39,8 @@ const SLIP_STYLES = `
   .slip-receipt .slip-forecast { word-break: break-all; }
   .slip-receipt .slip-disclaimer { font-size: 10px; margin-top: 10px; text-align: center; }
   .slip-receipt .slip-matches-title { font-weight: bold; margin: 8px 0 4px 0; }
-  .slip-receipt .slip-match-row { display: flex; align-items: baseline; gap: 8px; margin: 4px 0; padding: 4px 0; border-bottom: 1px solid #eee; }
+  .slip-receipt .slip-match-row { display: flex; align-items: center; margin: 4px 0; padding: 4px 0; border-bottom: 1px solid #eee; }
   .slip-receipt .slip-match-no { font-weight: bold; min-width: 28px; height: 22px; display: inline-flex; align-items: center; justify-content: center; background: #f0f0f0; border: 1px solid #333; }
-  .slip-receipt .slip-match-teams { flex: 1; }
 `;
 
 function PrintableSlip({ bet }: { bet: IBet }) {
@@ -94,11 +93,10 @@ function PrintableSlip({ bet }: { bet: IBet }) {
         </div>
         {sortedMatches.length > 0 && (
           <>
-            <div className="slip-matches-title">Selections (match no. + teams)</div>
+            <div className="slip-matches-title">Selections (match no.)</div>
             {sortedMatches.map((match) => (
               <div key={match.id} className="slip-match-row">
                 <span className="slip-match-no">{match.matchNo}</span>
-                <span className="slip-match-teams">{match.homeTeam} vs {match.awayTeam}</span>
               </div>
             ))}
           </>
